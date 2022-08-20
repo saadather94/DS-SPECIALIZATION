@@ -1,0 +1,167 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h2 id="-">---</h2>
+<h2 id="introduction">Introduction</h2>
+<p>It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.</p>
+<p>This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.</p>
+<p>The data for this assignment can be downloaded from the course web site:</p>
+<ul>
+<li>Dataset: <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip">Activity monitoring data</a></li>
+</ul>
+<p>The variables included in this dataset are:</p>
+<p>steps: Number of steps taking in a 5-minute interval (missing values are coded as 𝙽𝙰) </br> date: The date on which the measurement was taken in YYYY-MM-DD format </br> interval: Identifier for the 5-minute interval in which measurement was taken </br> The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.</p>
+<h2 id="loading-and-preprocessing-the-data">Loading and preprocessing the data</h2>
+<p>Unzip data to obtain a csv file.</p>
+<pre><code class="lang-r"><span class="hljs-function"><span class="hljs-title">library</span><span class="hljs-params">(<span class="hljs-string">"data.table"</span>)</span></span>
+<span class="hljs-function"><span class="hljs-title">library</span><span class="hljs-params">(ggplot2)</span></span>
+
+fileUrl &lt;- <span class="hljs-string">"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"</span>
+download.file(fileUrl, destfile = paste0(getwd(), <span class="hljs-string">'/repdata%2Fdata%2Factivity.zip'</span>), method = <span class="hljs-string">"curl"</span>)
+<span class="hljs-function"><span class="hljs-title">unzip</span><span class="hljs-params">(<span class="hljs-string">"repdata%2Fdata%2Factivity.zip"</span>,exdir = <span class="hljs-string">"data"</span>)</span></span>
+</code></pre>
+<h2 id="reading-csv-data-into-data-table-">Reading csv Data into Data.Table.</h2>
+<pre><code class="lang-r">activityDT &lt;- data<span class="hljs-selector-class">.table</span>::fread(<span class="hljs-selector-tag">input</span> = <span class="hljs-string">"data/activity.csv"</span>)
+</code></pre>
+<h2 id="what-is-mean-total-number-of-steps-taken-per-day-">What is mean total number of steps taken per day?</h2>
+<ol>
+<li>Calculate the total number of steps taken per day</li>
+</ol>
+<pre><code class="lang-r">Total_Steps &lt;- activityDT[, c(lapply(<span class="hljs-selector-class">.SD</span>, sum, na<span class="hljs-selector-class">.rm</span> = FALSE)), <span class="hljs-selector-class">.SDcols</span> = c(<span class="hljs-string">"steps"</span>), by = .(date)] 
+
+<span class="hljs-function"><span class="hljs-title">head</span><span class="hljs-params">(Total_Steps, <span class="hljs-number">10</span>)</span></span>
+</code></pre>
+<pre><code>##           date steps
+##  <span class="hljs-number">1</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-01</span>    NA
+##  <span class="hljs-number">2</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-02</span>   <span class="hljs-number">126</span>
+##  <span class="hljs-number">3</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-03</span> <span class="hljs-number">11352</span>
+##  <span class="hljs-number">4</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-04</span> <span class="hljs-number">12116</span>
+##  <span class="hljs-number">5</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-05</span> <span class="hljs-number">13294</span>
+##  <span class="hljs-number">6</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-06</span> <span class="hljs-number">15420</span>
+##  <span class="hljs-number">7</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-07</span> <span class="hljs-number">11015</span>
+##  <span class="hljs-number">8</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-08</span>    NA
+##  <span class="hljs-number">9</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-09</span> <span class="hljs-number">12811</span>
+## <span class="hljs-number">10</span>: <span class="hljs-number">2012</span><span class="hljs-number">-10</span><span class="hljs-number">-10</span>  <span class="hljs-number">9900</span>
+</code></pre><ol>
+<li>If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day.</li>
+</ol>
+<pre><code class="lang-r">ggplot(<span class="hljs-name">Total_Steps</span>, aes(<span class="hljs-name">x</span> = steps)) +
+    geom_histogram(<span class="hljs-name">fill</span> = <span class="hljs-string">"blue"</span>, binwidth = <span class="hljs-number">1000</span>) +
+    labs(<span class="hljs-name">title</span> = <span class="hljs-string">"Daily Steps"</span>, x = <span class="hljs-string">"Steps"</span>, y = <span class="hljs-string">"Frequency"</span>)
+</code></pre>
+<pre><code>## Warning: Removed <span class="hljs-number">8</span> rows containing non-finite values (stat_bin).
+</code></pre><p><img src="https://github.com/saadather94/DS-SPECIALIZATION/blob/main/5_Reproducible_Research/project1/%F0%9D%99%BF%F0%9D%99%B0%F0%9D%9F%B7_%F0%9D%9A%9D%F0%9D%9A%8E%F0%9D%9A%96%F0%9D%9A%99%F0%9D%9A%95%F0%9D%9A%8A%F0%9D%9A%9D%F0%9D%9A%8E_files/figure-markdown_github/unnamed-chunk-4-1.png" alt=""></p>
+<ol>
+<li>Calculate and report the mean and median of the total number of steps taken per day</li>
+</ol>
+<pre><code class="lang-r">Total_Steps[, .(<span class="hljs-attr">Mean_Steps</span> = mean(steps, na.<span class="hljs-attr">rm</span> = TRUE), <span class="hljs-attr">Median_Steps</span> = median(steps, na.<span class="hljs-attr">rm</span> = TRUE))]
+</code></pre>
+<pre><code>##    Mean_Steps Median_Steps
+## <span class="hljs-number">1</span>:   <span class="hljs-number">10766.19</span>        <span class="hljs-number">10765</span>
+</code></pre><h2 id="what-is-the-average-daily-activity-pattern-">What is the average daily activity pattern?</h2>
+<ol>
+<li>Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = &quot;𝚕&quot;) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)</li>
+</ol>
+<pre><code class="lang-r">IntervalDT &lt;- activityDT[, c(lapply(<span class="hljs-selector-class">.SD</span>, mean, na<span class="hljs-selector-class">.rm</span> = TRUE)), <span class="hljs-selector-class">.SDcols</span> = c(<span class="hljs-string">"steps"</span>), by = .(interval)] 
+
+<span class="hljs-function"><span class="hljs-title">ggplot</span><span class="hljs-params">(IntervalDT, aes(x = interval , y = steps)</span></span>) + geom_line(<span class="hljs-attribute">color</span>=<span class="hljs-string">"blue"</span>, size=<span class="hljs-number">1</span>) + labs(title = <span class="hljs-string">"Avg. Daily Steps"</span>, x = <span class="hljs-string">"Interval"</span>, y = <span class="hljs-string">"Avg. Steps per day"</span>)
+</code></pre>
+<p><img src="https://github.com/saadather94/DS-SPECIALIZATION/blob/main/5_Reproducible_Research/project1/%F0%9D%99%BF%F0%9D%99%B0%F0%9D%9F%B7_%F0%9D%9A%9D%F0%9D%9A%8E%F0%9D%9A%96%F0%9D%9A%99%F0%9D%9A%95%F0%9D%9A%8A%F0%9D%9A%9D%F0%9D%9A%8E_files/figure-markdown_github/unnamed-chunk-6-1.png" alt=""></p>
+<ol>
+<li>Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?</li>
+</ol>
+<pre><code class="lang-r"><span class="hljs-attr">IntervalDT[steps</span> == max(steps), .(max_interval = interval)]
+</code></pre>
+<pre><code>##    max_interval
+## <span class="hljs-number">1</span>:          <span class="hljs-number">835</span>
+</code></pre><h2 id="imputing-missing-values">Imputing missing values</h2>
+<ol>
+<li>Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)</li>
+</ol>
+<pre><code class="lang-r">activityDT[is.na(steps), <span class="hljs-selector-class">.N</span> ]
+</code></pre>
+<pre><code>## [<span class="hljs-number">1</span>] <span class="hljs-number">2304</span>
+</code></pre><pre><code class="lang-r"># alternative solution
+nrow(<span class="hljs-name">activityDT</span>[is.na(<span class="hljs-name">steps</span>),])
+</code></pre>
+<pre><code>## [<span class="hljs-number">1</span>] <span class="hljs-number">2304</span>
+</code></pre><ol>
+<li>Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.</li>
+</ol>
+<pre><code class="lang-r"># Filling <span class="hljs-keyword">in</span> missing values <span class="hljs-keyword">with</span> median <span class="hljs-keyword">of</span> dataset. 
+activityDT[<span class="hljs-keyword">is</span>.na(steps), <span class="hljs-string">"steps"</span>] &lt;- activityDT[, c(lapply(.SD, median, na.rm = <span class="hljs-literal">TRUE</span>)), .SDcols = c(<span class="hljs-string">"steps"</span>)]
+</code></pre>
+<ol>
+<li>Create a new dataset that is equal to the original dataset but with the missing data filled in.</li>
+</ol>
+<pre><code class="lang-r">data<span class="hljs-selector-class">.table</span>::fwrite(x = activityDT, file = <span class="hljs-string">"data/tidyData.csv"</span>, <span class="hljs-selector-tag">quote</span> = FALSE)
+</code></pre>
+<ol>
+<li>Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?</li>
+</ol>
+<pre><code class="lang-r"># <span class="hljs-keyword">total</span> number of steps taken per <span class="hljs-built_in">day</span>
+Total_Steps &lt;- activityDT[, c(lapply(.SD, <span class="hljs-keyword">sum</span>)), .SDcols = c(<span class="hljs-string">"steps"</span>), <span class="hljs-keyword">by</span> = .(date)] 
+
+# <span class="hljs-keyword">mean</span> and <span class="hljs-keyword">median</span> <span class="hljs-keyword">total</span> number of steps taken per <span class="hljs-built_in">day</span>
+Total_Steps[, .(Mean_Steps = <span class="hljs-keyword">mean</span>(steps), Median_Steps = <span class="hljs-keyword">median</span>(steps))]
+</code></pre>
+<pre><code>##    Mean_Steps Median_Steps
+## <span class="hljs-number">1</span>:    <span class="hljs-number">9354.23</span>        <span class="hljs-number">10395</span>
+</code></pre><pre><code class="lang-r">ggplot(<span class="hljs-name">Total_Steps</span>, aes(<span class="hljs-name">x</span> = steps)) + geom_histogram(<span class="hljs-name">fill</span> = <span class="hljs-string">"blue"</span>, binwidth = <span class="hljs-number">1000</span>) + labs(<span class="hljs-name">title</span> = <span class="hljs-string">"Daily Steps"</span>, x = <span class="hljs-string">"Steps"</span>, y = <span class="hljs-string">"Frequency"</span>)
+</code></pre>
+<p><img src="https://github.com/saadather94/DS-SPECIALIZATION/blob/main/5_Reproducible_Research/project1/%F0%9D%99%BF%F0%9D%99%B0%F0%9D%9F%B7_%F0%9D%9A%9D%F0%9D%9A%8E%F0%9D%9A%96%F0%9D%9A%99%F0%9D%9A%95%F0%9D%9A%8A%F0%9D%9A%9D%F0%9D%9A%8E_files/figure-markdown_github/unnamed-chunk-11-1.png" alt=""></p>
+<table>
+<thead>
+<tr>
+<th>Type of Estimate</th>
+<th>Mean_Steps</th>
+<th>Median_Steps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>First Part (with na)</td>
+<td>10765</td>
+<td>10765</td>
+</tr>
+<tr>
+<td>Second Part (fillin in na with median)</td>
+<td>9354.23</td>
+<td>10395</td>
+</tr>
+</tbody>
+</table>
+<h2 id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends-">Are there differences in activity patterns between weekdays and weekends?</h2>
+<ol>
+<li>Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.</li>
+</ol>
+<pre><code class="lang-r"># Just recreating activityDT <span class="hljs-keyword">from</span> scratch then making the new factor variable. (No need to, just want to be clear on what the entire process is.) 
+activityDT &lt;- data.table::fread(input = <span class="hljs-string">"data/activity.csv"</span>)
+activityDT[, date := <span class="hljs-keyword">as</span>.POSIXct(date, format = <span class="hljs-string">"%Y-%m-%d"</span>)]
+activityDT[, `Day <span class="hljs-keyword">of</span> Week`:= weekdays(x = date)]
+activityDT[grepl(pattern = <span class="hljs-string">"Monday|Tuesday|Wednesday|Thursday|Friday"</span>, x = `Day <span class="hljs-keyword">of</span> Week`), <span class="hljs-string">"weekday or weekend"</span>] &lt;- <span class="hljs-string">"weekday"</span>
+activityDT[grepl(pattern = <span class="hljs-string">"Saturday|Sunday"</span>, x = `Day <span class="hljs-keyword">of</span> Week`), <span class="hljs-string">"weekday or weekend"</span>] &lt;- <span class="hljs-string">"weekend"</span>
+activityDT[, `weekday or weekend` := <span class="hljs-keyword">as</span>.factor(`weekday or weekend`)]
+head(activityDT, <span class="hljs-number">10</span>)
+</code></pre>
+<pre><code>##     steps       <span class="hljs-built_in">date</span> interval <span class="hljs-built_in">Day</span> of Week <span class="hljs-built_in">weekday</span> <span class="hljs-built_in">or</span> weekend
+##  <span class="hljs-symbol">1:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>        <span class="hljs-number">0</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">2:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>        <span class="hljs-number">5</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">3:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">10</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">4:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">15</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">5:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">20</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">6:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">25</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">7:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">30</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">8:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">35</span>      Monday            <span class="hljs-built_in">weekday</span>
+##  <span class="hljs-symbol">9:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">40</span>      Monday            <span class="hljs-built_in">weekday</span>
+## <span class="hljs-symbol">10:</span>    <span class="hljs-built_in">NA</span> <span class="hljs-number">2012</span>-<span class="hljs-number">10</span>-<span class="hljs-number">01</span>       <span class="hljs-number">45</span>      Monday            <span class="hljs-built_in">weekday</span>
+</code></pre><ol>
+<li>Make a panel plot containing a time series plot (i.e. 𝚝𝚢𝚙𝚎 = &quot;𝚕&quot;) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.</li>
+</ol>
+<pre><code class="lang-r">activityDT[is.na(steps), <span class="hljs-string">"steps"</span>] &lt;- activityDT[, c(lapply(.SD, median, na.<span class="hljs-attr">rm</span> = TRUE)), .<span class="hljs-attr">SDcols</span> = c(<span class="hljs-string">"steps"</span>)]
+IntervalDT &lt;- activityDT[, c(lapply(.SD, mean, na.<span class="hljs-attr">rm</span> = TRUE)), .<span class="hljs-attr">SDcols</span> = c(<span class="hljs-string">"steps"</span>), <span class="hljs-attr">by</span> = .(interval, `weekday <span class="hljs-literal">or</span> weekend`)] 
+
+ggplot(IntervalDT , aes(<span class="hljs-attr">x</span> = interval , <span class="hljs-attr">y</span> = steps, <span class="hljs-attr">color=`weekday</span> <span class="hljs-literal">or</span> weekend`)) + geom_line() + labs(<span class="hljs-attr">title</span> = <span class="hljs-string">"Avg. Daily Steps by Weektype"</span>, <span class="hljs-attr">x</span> = <span class="hljs-string">"Interval"</span>, <span class="hljs-attr">y</span> = <span class="hljs-string">"No. of Steps"</span>) + facet_wrap(~`weekday <span class="hljs-literal">or</span> weekend` , <span class="hljs-attr">ncol</span> = <span class="hljs-number">1</span>, <span class="hljs-attr">nrow=2)</span>
+</code></pre>
+<p><img src="https://github.com/saadather94/DS-SPECIALIZATION/blob/main/5_Reproducible_Research/project1/%F0%9D%99%BF%F0%9D%99%B0%F0%9D%9F%B7_%F0%9D%9A%9D%F0%9D%9A%8E%F0%9D%9A%96%F0%9D%9A%99%F0%9D%9A%95%F0%9D%9A%8A%F0%9D%9A%9D%F0%9D%9A%8E_files/figure-markdown_github/unnamed-chunk-13-1.png" alt=""></p>
+</body></html>
